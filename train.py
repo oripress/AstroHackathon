@@ -47,7 +47,7 @@ def train(args):
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
-    fixed_noise = to_var(torch.randn(1, args.nz, 1))
+    fixed_noise = to_var(torch.randn(1, args.nz, 1), device)
 
     for i in tqdm(range(args.iters)):
         try:

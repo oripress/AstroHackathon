@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 import argparse
 
-from nets import Generator, Infer, weights_init
+from nets import Generator, Discriminator, weights_init
 from utils import GalaxySet
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
@@ -20,12 +20,9 @@ def train(args):
     gen = gen.to(device)
     gen.apply(weights_init)
 
-    disc = Infer(args.nc, args.ndf)
-    disc = disc.to(device)
-    disc.apply(weights_init)
-
-    bce = nn.BCELoss()
-    bce = bce.to(device)
+    discriminator = Discriminator(args.nc, args.ndf)
+    discriminator = discriminator.to(device)
+    discriminator.apply(weights_init)
 
     mse = nn.MSELoss()
     mse = mse.to(device)
@@ -34,7 +31,7 @@ def train(args):
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2)
     loader_iter = iter(loader)
 
-    i_optimizer = Adam(infer.parameters(), betas=(0.5, 0.999), lr=args.lr)
+    d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
     real_labels = to_var(torch.ones(args.bs), device)
@@ -47,34 +44,37 @@ def train(args):
             loader_iter = iter(loader)
             batch_data = loader_iter.next()
 
-        batch_data = to_var(batch_data, device)
+        batch_data = to_var(batch_data, device).unsqueeze(1).float()
 
         ### Train Infer ###
 
-        i_optimizer.reset_grads()
+        d_optimizer.zero_grad()
 
         # train Infer with real
-        pred_real = infer(batch_data)
-        infer_loss = bce(pred_real, real_labels)
+        pred_real = discriminator(batch_data)
+
+        import pdb; pdb.set_trace()
+
+        infer_loss = mse(pred_real, real_labels)
 
         # train infer with fakes
-        z = to_var(torch.randn((args.bs, args.nz)), device)
+        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
         fakes = gen(z)
-        pred_fake = infer(fakes)
-        infer_loss += bce(pred_fake, fake_labels)
+        pred_fake = discriminator(fakes)
+        infer_loss += mse(pred_fake, fake_labels)
 
         infer_loss.backward()
 
-        i_optimizer.step()
+        d_optimizer.step()
 
         ### Train Gen ###
 
-        g_optimizer.reset_grads()
+        g_optimizer.zero_grads()
 
-        z = to_var(torch.randn((args.bs, args.nz)), device)
+        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
         fakes = gen(z)
-        pred_fake = infer(fakes)
-        gen_loss = bce(pred_fake, real_labels)
+        pred_fake = discriminator(fakes)
+        gen_loss = mse(pred_fake, real_labels)
 
         gen_loss.backward()
 

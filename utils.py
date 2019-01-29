@@ -10,11 +10,9 @@ class GalaxySet(Dataset):
         self.data = self.load_data(data_path, normalized)
 
     def load_data(self, data_path, normalized):
-
         np_data = np.load(data_path)
 
         if not normalized:
-
             # find max feature value:
             max_data = np.max(np_data, axis=0)
             clipped_data = (np_data / max_data) * 2 - 1
@@ -25,7 +23,6 @@ class GalaxySet(Dataset):
             normalized_data = (clipped_data - means) / stds
 
             np.save(data_path + "normalized", normalized_data)
-
         else:
             normalized_data = np_data
 
@@ -51,5 +48,7 @@ if __name__ == "__main__":
 
     y = galaxy_set[0]
 
-    print torch.mean(y, dim=0)
-    print torch.std(y, dim=0)
+    print
+    torch.mean(y, dim=0)
+    print
+    torch.std(y, dim=0)

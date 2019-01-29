@@ -63,7 +63,6 @@ def train(args):
         discriminator_loss += bce(pred_fake, fake_labels)
 
         discriminator_loss.backward()
-
         d_optimizer.step()
 
         ### Train Gen ###
@@ -76,7 +75,6 @@ def train(args):
         gen_loss = bce(pred_fake, real_labels)
 
         gen_loss.backward()
-
         g_optimizer.step()
 
 

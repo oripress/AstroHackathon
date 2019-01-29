@@ -35,7 +35,7 @@ def train(args):
     mse = nn.MSELoss()
     mse = mse.to(device)
 
-    galaxy_dataset = GalaxySet(args.data_path, normalized=True)
+    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized)
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2)
     loader_iter = iter(loader)
 
@@ -116,6 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--data_path', type=str, required=True)
+    parser.add_argument('--normalized', type=bool, default=False)
     parser.add_argument('--nz', type=int, default=100)
     parser.add_argument('--nc', type=int, default=1)
     parser.add_argument('--ngf', type=int, default=64)

@@ -15,6 +15,7 @@ def to_var(x, device):
 
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     gen = Generator(args.nz, args.nc, args.ngf)
     gen = gen.to(device)
     gen.apply(weights_init)
@@ -22,6 +23,10 @@ def train(args):
     discriminator = Discriminator(args.nc, args.ndf)
     discriminator = discriminator.to(device)
     discriminator.apply(weights_init)
+
+    infer = Infer(args.nc, args.ndf)
+    infer = infer.to(device)
+    infer.apply(weights_init)
 
     bce = nn.BCELoss()
     bce = bce.to(device)
@@ -35,6 +40,7 @@ def train(args):
 
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
+    i_optimizer = Adam(infer.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
@@ -72,10 +78,22 @@ def train(args):
         z = to_var(torch.randn((args.bs, 1, args.nz)), device)
         fakes = gen(z)
         pred_fake = discriminator(fakes)
-        gen_loss = bce(pred_fake, real_labels)
+        gen_loss = mse(pred_fake, real_labels)
 
         gen_loss.backward()
         g_optimizer.step()
+
+        ### Train Infer ###
+
+        i_optimizer.zero_grads()
+
+        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
+        fakes = gen(z)
+        infer_fakes = discriminator(fakes)
+        infer_loss = bce(infer_fakes, z.detach())
+
+        infer_loss.backward()
+        i_optimizer.step()
 
 
 if __name__ == '__main__':

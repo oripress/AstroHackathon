@@ -10,24 +10,24 @@ from torch.optim import Adam
 
 
 def to_var(x, device):
-    return Variable(x, requires_grad=False).device(device)
+    return Variable(x, requires_grad=False).to(device)
 
 
 def train(args):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    gen = Generator(args.nz, args.nf, args.nd)
-    gen = gen.device(device)
-    gen.apply(weights_init())
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    gen = Generator(args.nz, args.nc, args.ngf)
+    gen = gen.to(device)
+    gen.apply(weights_init)
 
-    infer = Infer(args.nz, args.nf, args.nd)
-    infer = infer.device(device)
-    infer.apply(weights_init())
+    infer = Infer(args.nc, args.ndf)
+    infer = infer.to(device)
+    infer.apply(weights_init)
 
     mse = nn.MSELoss()
-    mse = mse.device(device)
+    mse = mse.to(device)
 
-    galaxy_dataset = GalaxySet(args.data_path)
+    galaxy_dataset = GalaxySet(args.data_path, normalized=True)
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2)
     loader_iter = iter(loader)
 
@@ -44,7 +44,7 @@ def train(args):
             loader_iter = iter(loader)
             batch_data = loader_iter.next()
 
-        batch_data = to_var(batch_data)
+        batch_data = to_var(batch_data, device)
 
         ### Train Infer ###
 
@@ -55,7 +55,7 @@ def train(args):
         infer_loss = mse(pred_real, real_labels)
 
         # train infer with fakes
-        z = to_var(torch.randn((args.bs, args.z)), device)
+        z = to_var(torch.randn((args.bs, args.nz)), device)
         fakes = gen(z)
         pred_fake = infer(fakes)
         infer_loss += mse(pred_fake, fake_labels)
@@ -68,7 +68,7 @@ def train(args):
 
         g_optimizer.reset_grads()
 
-        z = to_var(torch.randn((args.bs, args.z)), device)
+        z = to_var(torch.randn((args.bs, args.nz)), device)
         fakes = gen(z)
         pred_fake = infer(fakes)
         gen_loss = mse(pred_fake, real_labels)
@@ -86,8 +86,9 @@ if __name__ == '__main__':
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--data_path', type=str, required=True)
     parser.add_argument('--nz', type=int, default=100)
-    parser.add_argument('--nf', type=int, default=8295)
-    parser.add_argument('--nd', type=int, default=800)
+    parser.add_argument('--nc', type=int, default=1)
+    parser.add_argument('--ngf', type=int, default=64)
+    parser.add_argument('--ndf', type=int, default=64)
 
     args = parser.parse_args()
 

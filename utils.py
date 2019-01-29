@@ -42,7 +42,7 @@ class GalaxySet(Dataset):
 def display_noise(noise, out):
     fig = plt.figure()
     plt.plot(noise)
-    plt.savefig(out + 'fig')
+    plt.savefig(out)
     fig.clf()
 
 

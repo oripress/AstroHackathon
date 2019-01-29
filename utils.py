@@ -2,6 +2,7 @@ import numpy as np
 from torch.utils.data import Dataset
 import torch
 
+import matplotlib.pyplot as plt
 
 class GalaxySet(Dataset):
     def __init__(self, data_path, normalized=False):
@@ -35,6 +36,11 @@ class GalaxySet(Dataset):
         features = torch.from_numpy(features)
 
         return features
+
+
+def display_noise(noise):
+    plt.clear()
+    plt
 
 
 if __name__ == "__main__":

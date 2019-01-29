@@ -11,26 +11,25 @@ def weights_init(m):
 
 
 class Generator(nn.Module):
-    def __init__(self, nz, nf, ngf):
+    def __init__(self, nz, nc, ngf):
         super(Generator, self).__init__()
         self.nz = nz
-        self.nf = nf
+        self.nc = nc
         self.ngf = ngf
         self.main = nn.Sequential(
-            nn.ConvTranspose1d(self.nz, self.ngf * 1, bias=False),
-            nn.BatchNorm1d(ngf * 1),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 1, self.ngf * 2, bias=False),
-            nn.BatchNorm1d(ngf * 2),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 2, self.ngf * 4, bias=False),
-            nn.BatchNorm1d(ngf * 4),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 8, bias=False),
+            nn.ConvTranspose1d(self.nz, self.ngf * 8, 4, bias=False),
             nn.BatchNorm1d(ngf * 8),
             nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 8, self.nf, bias=False),
-            nn.BatchNorm1d(self.nf),
+            nn.ConvTranspose1d(self.ngf * 8, self.ngf * 4, 4,  bias=False),
+            nn.BatchNorm1d(ngf * 4),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 2, 4,  bias=False),
+            nn.BatchNorm1d(ngf * 2),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 2, self.ngf, 4, bias=False),
+            nn.BatchNorm1d(ngf),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf, self.nc, 4, bias=False),
             nn.Tanh()
         )
 
@@ -40,25 +39,24 @@ class Generator(nn.Module):
 
 
 class Infer(nn.Module):
-    def __init__(self, nz, ngf):
+    def __init__(self, nc, ndf):
         super(Infer, self).__init__()
-        self.nz = nz
-        self.ngf = ngf
+        self.nc = nc
+        self.ndf = ndf
         self.main = nn.Sequential(
-            nn.Conv1d(self.nf, self.ngf * 8, bias=False),
-            nn.BatchNorm1d(ngf * 8),
+            nn.Conv1d(self.nc, self.ndf, 4, bias=False),
+            nn.BatchNorm1d(ndf),
             nn.LeakyReLU(0.2),
-            nn.ConvTranspose1d(self.ngf * 8, self.ngf * 4, bias=False),
-            nn.BatchNorm1d(ngf * 4),
+            nn.Conv1d(self.ndf, self.ndf * 2, 4, bias=False),
+            nn.BatchNorm1d(ndf * 2),
             nn.LeakyReLU(0.2),
-            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 2, bias=False),
-            nn.BatchNorm1d(ngf * 2),
+            nn.Conv1d(self.ndf * 2, self.ndf * 4, 4, bias=False),
+            nn.BatchNorm1d(ndf * 4),
             nn.LeakyReLU(0.2),
-            nn.ConvTranspose1d(self.ngf * 2, self.ngf * 1, bias=False),
-            nn.BatchNorm1d(ngf * 1),
+            nn.Conv1d(self.ndf * 4, self.ndf * 8, 4, bias=False),
+            nn.BatchNorm1d(ndf * 8),
             nn.LeakyReLU(0.2),
-            nn.ConvTranspose1d(self.ngf * 1, self.nz, bias=False),
-            nn.BatchNorm1d(self.nz * 1),
+            nn.Conv1d(self.ndf * 8, self.nc, 4, bias=False),
             nn.Tanh()
         )
 

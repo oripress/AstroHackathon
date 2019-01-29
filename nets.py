@@ -1,6 +1,4 @@
-import torch
 import torch.nn as nn
-
 
 
 def weights_init(m):
@@ -13,25 +11,26 @@ def weights_init(m):
 
 
 class Generator(nn.Module):
-    def __init__(self, nz, ngf):
+    def __init__(self, nz, nf, ngf):
         super(Generator, self).__init__()
         self.nz = nz
+        self.nf = nf
         self.ngf = ngf
         self.main = nn.Sequential(
-            nn.ConvTranspose1d(self.nz, self.ngf * 8, bias=False),
-            nn.BatchNorm1d(ngf * 8),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 8, self.ngf * 4, bias=False),
-            nn.BatchNorm1d(ngf * 4),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 2, bias=False),
-            nn.BatchNorm1d(ngf * 2),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 2, self.ngf * 1, bias=False),
+            nn.ConvTranspose1d(self.nz, self.ngf * 1, bias=False),
             nn.BatchNorm1d(ngf * 1),
             nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 1, self.nz, bias=False),
-            nn.BatchNorm1d(self.nz * 1),
+            nn.ConvTranspose1d(self.ngf * 1, self.ngf * 2, bias=False),
+            nn.BatchNorm1d(ngf * 2),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 2, self.ngf * 4, bias=False),
+            nn.BatchNorm1d(ngf * 4),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 8, bias=False),
+            nn.BatchNorm1d(ngf * 8),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 8, self.nf, bias=False),
+            nn.BatchNorm1d(self.nf),
             nn.Tanh()
         )
 
@@ -46,12 +45,20 @@ class Infer(nn.Module):
         self.nz = nz
         self.ngf = ngf
         self.main = nn.Sequential(
-            nn.ConvTranspose1d(self.nz, self.ngf * 8, 4, 1, 0, bias=False),
+            nn.Conv1d(self.nf, self.ngf * 8, bias=False),
             nn.BatchNorm1d(ngf * 8),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 8, self.ngf * 4, 4, 1, 0, bias=False),
+            nn.LeakyReLU(0.2),
+            nn.ConvTranspose1d(self.ngf * 8, self.ngf * 4, bias=False),
             nn.BatchNorm1d(ngf * 4),
-            nn.ReLU(True),
+            nn.LeakyReLU(0.2),
+            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 2, bias=False),
+            nn.BatchNorm1d(ngf * 2),
+            nn.LeakyReLU(0.2),
+            nn.ConvTranspose1d(self.ngf * 2, self.ngf * 1, bias=False),
+            nn.BatchNorm1d(ngf * 1),
+            nn.LeakyReLU(0.2),
+            nn.ConvTranspose1d(self.ngf * 1, self.nz, bias=False),
+            nn.BatchNorm1d(self.nz * 1),
             nn.Tanh()
         )
 
@@ -60,5 +67,5 @@ class Infer(nn.Module):
         return net
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     pass

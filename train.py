@@ -1,7 +1,25 @@
+import torch.nn as nn
+
 import argparse
 
+from nets import Generator, Infer, weights_init
+
+
 def train(args):
-    pass
+    gen = Generator()
+    gen.cuda()
+    gen.apply(weights_init())
+
+    infer = Infer()
+    infer.cuda()
+    infer.apply(weights_init())
+
+    mse = nn.MSELoss()
+    mse.cuda()
+
+
+    for i in range(args.iters):
+
 
 
 if __name__ == '__main__':

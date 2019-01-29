@@ -14,8 +14,8 @@ def to_var(x, device):
 
 
 def train(args):
-
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
     gen = Generator()
     gen = gen.device(device)
     gen.apply(weights_init())

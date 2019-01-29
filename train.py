@@ -3,11 +3,13 @@ import torch
 import argparse
 
 from nets import Generator, Discriminator, Infer, weights_init
-from utils import GalaxySet
+from utils import GalaxySet, display_noise
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch.optim import Adam
 from tqdm import tqdm
+
+import os
 
 
 def to_var(x, device):
@@ -45,6 +47,7 @@ def train(args):
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
+    fixed_noise = to_var(torch.randn(1, args.nz, 1))
 
     for i in tqdm(range(args.iters)):
         try:
@@ -87,26 +90,27 @@ def train(args):
 
         if i % 100 == 0:
             print("Iteration %d >> g_loss: %.4f., d_loss: %.4f." % (i, gen_loss, d_loss))
-            torch.save(gen.state_dict(), args.out + 'gen')
-            torch.save(discriminator.state_dict(), args.out + 'disc')
+            torch.save(gen.state_dict(), os.path.join(args.out, 'gen_%d.pkl' % i))
+            torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % i))
+            fixed_fake = gen(fixed_noise)
+            display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
 
-
-    for i in tqdm(range(args.iters)):
-        ### Train Infer ###
-
-        i_optimizer.zero_grads()
-
-        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
-        fakes = gen(z)
-        infer_fakes = infer(fakes)
-        infer_loss = bce(infer_fakes, z.detach())
-
-        infer_loss.backward()
-        i_optimizer.step()
-
-        if i % 100 == 0:
-            print("Iteration %d >> infer_loss: %.4f" % (i, infer_loss))
-            torch.save(infer.state_dict(), args.out + 'infer')
+    # for i in tqdm(range(args.iters)):
+    #     ### Train Infer ###
+    #
+    #     i_optimizer.zero_grads()
+    #
+    #     z = to_var(torch.randn((args.bs, 1, args.nz)), device)
+    #     fakes = gen(z)
+    #     infer_fakes = infer(fakes)
+    #     infer_loss = bce(infer_fakes, z.detach())
+    #
+    #     infer_loss.backward()
+    #     i_optimizer.step()
+    #
+    #     if i % 100 == 0:
+    #         print("Iteration %d >> infer_loss: %.4f" % (i, infer_loss))
+    #         torch.save(infer.state_dict(), os.path.join(args.out, 'infer_%d.pkl' % i))
 
 
 if __name__ == '__main__':
@@ -123,5 +127,8 @@ if __name__ == '__main__':
     parser.add_argument('--ndf', type=int, default=64)
 
     args = parser.parse_args()
+
+    if not os.path.exists(args.out):
+        os.mkdir(args.out)
 
     train(args)

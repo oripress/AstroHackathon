@@ -39,9 +39,10 @@ class GalaxySet(Dataset):
 
 
 def display_noise(noise, out):
+    fig = plt.figure()
     plt.plot(noise)
     plt.savefig(out + 'fig')
-    plt.clf()
+    fig.clf()
 
 
 
@@ -59,5 +60,5 @@ if __name__ == "__main__":
     # print(torch.std(y, dim=0))
     #
 
-    noise = np.random.randint(0, 1, (1, 8295))
+    noise = np.random.randint(0, 1000, 8295)
     display_noise(noise, './')

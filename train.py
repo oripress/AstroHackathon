@@ -36,7 +36,7 @@ def train(args):
     mse = mse.to(device)
 
     galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized)
-    loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2)
+    loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2, drop_last=True)
     loader_iter = iter(loader)
 
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)

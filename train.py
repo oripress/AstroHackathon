@@ -20,9 +20,12 @@ def train(args):
     gen = gen.to(device)
     gen.apply(weights_init)
 
-    infer = Infer(args.nc, args.ndf)
-    infer = infer.to(device)
-    infer.apply(weights_init)
+    disc = Infer(args.nc, args.ndf)
+    disc = disc.to(device)
+    disc.apply(weights_init)
+
+    bce = nn.BCELoss()
+    bce = bce.to(device)
 
     mse = nn.MSELoss()
     mse = mse.to(device)
@@ -52,13 +55,13 @@ def train(args):
 
         # train Infer with real
         pred_real = infer(batch_data)
-        infer_loss = mse(pred_real, real_labels)
+        infer_loss = bce(pred_real, real_labels)
 
         # train infer with fakes
         z = to_var(torch.randn((args.bs, args.nz)), device)
         fakes = gen(z)
         pred_fake = infer(fakes)
-        infer_loss += mse(pred_fake, fake_labels)
+        infer_loss += bce(pred_fake, fake_labels)
 
         infer_loss.backward()
 
@@ -71,7 +74,7 @@ def train(args):
         z = to_var(torch.randn((args.bs, args.nz)), device)
         fakes = gen(z)
         pred_fake = infer(fakes)
-        gen_loss = mse(pred_fake, real_labels)
+        gen_loss = bce(pred_fake, real_labels)
 
         gen_loss.backward()
 

@@ -85,19 +85,28 @@ def train(args):
         gen_loss.backward()
         g_optimizer.step()
 
-        print("g_loss: %.4f., d_loss: %.4f." % (gen_loss, d_loss))
+        if i % 100 == 0:
+            print("Iteration %d >> g_loss: %.4f., d_loss: %.4f." % (i, gen_loss, d_loss))
+            torch.save(gen.state_dict(), args.out + 'gen')
+            torch.save(discriminator.state_dict(), args.out + 'disc')
 
-        # ### Train Infer ###
-        #
-        # i_optimizer.zero_grads()
-        #
-        # z = to_var(torch.randn((args.bs, 1, args.nz)), device)
-        # fakes = gen(z)
-        # infer_fakes = infer(fakes)
-        # infer_loss = bce(infer_fakes, z.detach())
-        #
-        # infer_loss.backward()
-        # i_optimizer.step()
+
+    for i in tqdm(range(args.iters)):
+        ### Train Infer ###
+
+        i_optimizer.zero_grads()
+
+        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
+        fakes = gen(z)
+        infer_fakes = infer(fakes)
+        infer_loss = bce(infer_fakes, z.detach())
+
+        infer_loss.backward()
+        i_optimizer.step()
+
+        if i % 100 == 0:
+            print("Iteration %d >> infer_loss: %.4f" % (i, infer_loss))
+            torch.save(infer.state_dict(), args.out + 'infer')
 
 
 if __name__ == '__main__':

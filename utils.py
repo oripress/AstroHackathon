@@ -23,6 +23,7 @@ class GalaxySet(Dataset):
 
             normalized_data = (clipped_data - means) / stds
             np.save(data_path[:-4] + "_normalized.npy", normalized_data)
+            print('Saving normalized data')
         else:
             normalized_data = np_data
 

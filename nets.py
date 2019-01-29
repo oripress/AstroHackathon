@@ -46,17 +46,44 @@ class Discriminator(nn.Module):
             nn.Conv1d(self.nc, self.ndf, 4, bias=False),
             nn.BatchNorm1d(ndf),
             nn.LeakyReLU(0.2),
-            # nn.Conv1d(self.ndf, self.ndf * 2, 4, bias=False),
-            # nn.BatchNorm1d(ndf * 2),
-            # nn.LeakyReLU(0.2),
-            # nn.Conv1d(self.ndf * 2, self.ndf * 4, 4, bias=False),
-            # nn.BatchNorm1d(ndf * 4),
-            # nn.LeakyReLU(0.2),
-            # nn.Conv1d(self.ndf * 4, self.ndf * 8, 4, bias=False),
-            # nn.BatchNorm1d(ndf * 8),
-            # nn.LeakyReLU(0.2),
-            # nn.Conv1d(self.ndf * 8, self.nc, 4, bias=False),
-            # nn.Tanh()
+            nn.Conv1d(self.ndf, self.ndf * 2, 4, bias=False),
+            nn.BatchNorm1d(ndf * 2),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 2, self.ndf * 4, 4, bias=False),
+            nn.BatchNorm1d(ndf * 4),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 4, self.ndf * 8, 4, bias=False),
+            nn.BatchNorm1d(ndf * 8),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 8, self.nc, 4, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, net):
+        net = self.main(net)
+        return net
+
+
+class Infer(nn.Module):
+    def __init__(self, nc, ndf):
+        super(Infer, self).__init__()
+        self.nc = nc
+        self.ndf = ndf
+        self.main = nn.Sequential(
+            nn.Conv1d(self.nc, self.ndf, 4, bias=False),
+            nn.BatchNorm1d(ndf),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf, self.ndf * 2, 4, bias=False),
+            nn.BatchNorm1d(ndf * 2),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 2, self.ndf * 4, 4, bias=False),
+            nn.BatchNorm1d(ndf * 4),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 4, self.ndf * 8, 4, bias=False),
+            nn.BatchNorm1d(ndf * 8),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 8, self.nc, 4, bias=False),
+            nn.Tanh()
         )
 
     def forward(self, net):

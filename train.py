@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 import argparse
 
-from nets import Generator, Discriminator, weights_init
+from nets import Generator, Discriminator, Infer, weights_init
 from utils import GalaxySet
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
@@ -14,7 +14,6 @@ def to_var(x, device):
 
 
 def train(args):
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     gen = Generator(args.nz, args.nc, args.ngf)
     gen = gen.to(device)
@@ -23,6 +22,9 @@ def train(args):
     discriminator = Discriminator(args.nc, args.ndf)
     discriminator = discriminator.to(device)
     discriminator.apply(weights_init)
+
+    bce = nn.BCELoss()
+    bce = bce.to(device)
 
     mse = nn.MSELoss()
     mse = mse.to(device)
@@ -46,24 +48,21 @@ def train(args):
 
         batch_data = to_var(batch_data, device).unsqueeze(1).float()
 
-        ### Train Infer ###
+        ### Train Discriminator ###
 
         d_optimizer.zero_grad()
 
         # train Infer with real
         pred_real = discriminator(batch_data)
-
-        import pdb; pdb.set_trace()
-
-        infer_loss = mse(pred_real, real_labels)
+        discriminator_loss = bce(pred_real, real_labels)
 
         # train infer with fakes
         z = to_var(torch.randn((args.bs, 1, args.nz)), device)
         fakes = gen(z)
         pred_fake = discriminator(fakes)
-        infer_loss += mse(pred_fake, fake_labels)
+        discriminator_loss += bce(pred_fake, fake_labels)
 
-        infer_loss.backward()
+        discriminator_loss.backward()
 
         d_optimizer.step()
 
@@ -74,7 +73,7 @@ def train(args):
         z = to_var(torch.randn((args.bs, 1, args.nz)), device)
         fakes = gen(z)
         pred_fake = discriminator(fakes)
-        gen_loss = mse(pred_fake, real_labels)
+        gen_loss = bce(pred_fake, real_labels)
 
         gen_loss.backward()
 

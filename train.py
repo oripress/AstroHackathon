@@ -7,6 +7,7 @@ from utils import GalaxySet
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch.optim import Adam
+from tqdm import tqdm
 
 
 def to_var(x, device):
@@ -45,14 +46,14 @@ def train(args):
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
 
-    for i in range(args.iters):
+    for i in tqdm(range(args.iters)):
         try:
             batch_data = loader_iter.next()
         except StopIteration:
             loader_iter = iter(loader)
             batch_data = loader_iter.next()
 
-        batch_data = to_var(batch_data, device).unsqueeze(1).float()
+        batch_data = to_var(batch_data, device).unsqueeze(1)
 
         ### Train Discriminator ###
 
@@ -60,40 +61,43 @@ def train(args):
 
         # train Infer with real
         pred_real = discriminator(batch_data)
-        discriminator_loss = bce(pred_real, real_labels)
+        d_loss = bce(pred_real, real_labels)
 
         # train infer with fakes
-        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
+        z = to_var(torch.randn((args.bs, args.nz, 1)), device)
         fakes = gen(z)
-        pred_fake = discriminator(fakes)
-        discriminator_loss += bce(pred_fake, fake_labels)
+        pred_fake = discriminator(fakes.detach())
+        d_loss += bce(pred_fake, fake_labels)
 
-        discriminator_loss.backward()
+        d_loss.backward()
+
         d_optimizer.step()
 
         ### Train Gen ###
 
-        g_optimizer.zero_grads()
+        g_optimizer.zero_grad()
 
-        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
+        z = to_var(torch.randn((args.bs, args.nz, 1)), device)
         fakes = gen(z)
         pred_fake = discriminator(fakes)
-        gen_loss = mse(pred_fake, real_labels)
+        gen_loss = bce(pred_fake, real_labels)
 
         gen_loss.backward()
         g_optimizer.step()
 
-        ### Train Infer ###
+        print("g_loss: %.4f., d_loss: %.4f." % (gen_loss, d_loss))
 
-        i_optimizer.zero_grads()
-
-        z = to_var(torch.randn((args.bs, 1, args.nz)), device)
-        fakes = gen(z)
-        infer_fakes = discriminator(fakes)
-        infer_loss = bce(infer_fakes, z.detach())
-
-        infer_loss.backward()
-        i_optimizer.step()
+        # ### Train Infer ###
+        #
+        # i_optimizer.zero_grads()
+        #
+        # z = to_var(torch.randn((args.bs, 1, args.nz)), device)
+        # fakes = gen(z)
+        # infer_fakes = infer(fakes)
+        # infer_loss = bce(infer_fakes, z.detach())
+        #
+        # infer_loss.backward()
+        # i_optimizer.step()
 
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@ class GalaxySet(Dataset):
 
     def __getitem__(self, item):
         features = self.data[item]
-        features = torch.from_numpy(features)
+        features = torch.from_numpy(features).float()
 
         return features
 

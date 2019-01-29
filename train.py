@@ -16,11 +16,11 @@ def to_var(x, device):
 def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    gen = Generator()
+    gen = Generator(args.nz, args.nf, args.nd)
     gen = gen.device(device)
     gen.apply(weights_init())
 
-    infer = Infer()
+    infer = Infer(args.nz, args.nf, args.nd)
     infer = infer.device(device)
     infer.apply(weights_init())
 
@@ -31,8 +31,8 @@ def train(args):
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2)
     loader_iter = iter(loader)
 
-    i_optimizer = Adam(infer.parameters(), args.lr)
-    g_optimizer = Adam(gen.parameters(), args.lr)
+    i_optimizer = Adam(infer.parameters(), betas=(0.5, 0.999), lr=args.lr)
+    g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
@@ -49,7 +49,6 @@ def train(args):
         ### Train Infer ###
 
         i_optimizer.reset_grads()
-        g_optimizer.reset_grads()
 
         # train Infer with real
         pred_real = infer(batch_data)
@@ -67,7 +66,6 @@ def train(args):
 
         ### Train Gen ###
 
-        i_optimizer.reset_grads()
         g_optimizer.reset_grads()
 
         z = to_var(torch.randn((args.bs, args.z)), device)
@@ -87,7 +85,9 @@ if __name__ == '__main__':
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--data_path', type=str, required=True)
-    parser.add_argument('--z', type=int, default=100)
+    parser.add_argument('--nz', type=int, default=100)
+    parser.add_argument('--nf', type=int, default=8295)
+    parser.add_argument('--nd', type=int, default=800)
 
     args = parser.parse_args()
 

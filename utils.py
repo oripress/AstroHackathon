@@ -21,9 +21,7 @@ class GalaxySet(Dataset):
             stds = np.std(clipped_data, axis=0)
 
             normalized_data = (clipped_data - means) / stds
-
             np.save(data_path + "_normalized", normalized_data)
-
         else:
             normalized_data = np_data
 
@@ -34,7 +32,6 @@ class GalaxySet(Dataset):
 
     def __getitem__(self, item):
         features = self.data[item]
-
         features = torch.from_numpy(features)
 
         return features

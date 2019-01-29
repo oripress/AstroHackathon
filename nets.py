@@ -1,6 +1,5 @@
 import torch.nn as nn
 
-
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -67,5 +66,5 @@ class Infer(nn.Module):
         return net
 
 
-if __name__ == '__main__':
+if __name__=='__main__':
     pass

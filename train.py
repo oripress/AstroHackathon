@@ -31,8 +31,8 @@ def train(args):
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2)
     loader_iter = iter(loader)
 
-    i_optimizer = Adam(infer.parameters(), args.lr)
-    g_optimizer = Adam(gen.parameters(), args.lr)
+    i_optimizer = Adam(infer.parameters(), betas=(0.5, 0.999), lr=args.lr)
+    g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
@@ -49,7 +49,6 @@ def train(args):
         ### Train Infer ###
 
         i_optimizer.reset_grads()
-        g_optimizer.reset_grads()
 
         # train Infer with real
         pred_real = infer(batch_data)
@@ -67,7 +66,6 @@ def train(args):
 
         ### Train Gen ###
 
-        i_optimizer.reset_grads()
         g_optimizer.reset_grads()
 
         z = to_var(torch.randn((args.bs, args.nz)), device)
@@ -83,7 +81,7 @@ def train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', default='out')
-    parser.add_argument('--lr', type=float, default=0.0002)
+    parser.add_argument('--lr', type=float, default=0.002)
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--data_path', type=str, required=True)

@@ -24,7 +24,7 @@ class GalaxySet(Dataset):
 
             normalized_data = (clipped_data - means) / stds
 
-            np.save(data_path + "normalized", normalized_data)
+            np.save(data_path + "_normalized", normalized_data)
 
         else:
             normalized_data = np_data
@@ -43,7 +43,7 @@ class GalaxySet(Dataset):
 
 
 if __name__ == "__main__":
-    x = np.random.randint(0, 1000, (1000, 800))
+    x = np.random.randint(0, 1000, (1000, 8295))
 
     np.save("test_normalize.npy", x)
 
@@ -51,5 +51,5 @@ if __name__ == "__main__":
 
     y = galaxy_set[0]
 
-    print torch.mean(y, dim=0)
-    print torch.std(y, dim=0)
+    print(torch.mean(y, dim=0))
+    print(torch.std(y, dim=0))

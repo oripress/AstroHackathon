@@ -48,7 +48,7 @@ class GalaxySet(Dataset):
         return data_files, normalized_dir
 
     def __len__(self):
-        return len(self.data)
+        return len(self.data_files)
 
     def __getitem__(self, item):
         features_file = os.path.join(self.base_dir, self.data_files[item])

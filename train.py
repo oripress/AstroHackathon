@@ -23,7 +23,7 @@ def train(args):
     gen = gen.to(device)
     gen.apply(weights_init)
 
-    discriminator = Discriminator(args.nz)
+    discriminator = Discriminator(800)
     discriminator = discriminator.to(device)
     discriminator.apply(weights_init)
 

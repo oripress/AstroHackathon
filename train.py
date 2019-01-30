@@ -168,26 +168,17 @@ def rank_anamolies(args):
     sum_100 = 0
     sum_rand = 0
 
-    total_100 = 100
-    total_rand = 100
+    list_scores = [x[0] for x in scores]
 
     for i in range(100):
         cur = wall[i][0]
-        if cur in scores:
-            sum_100 = scores.index(cur)
-        else:
-            total_100 -= 1
+        sum_100 += list_scores.index(cur)
 
         cur_rand = wall[random.randrange(len(scores))][0]
-        if cur_rand in scores:
-            sum_rand += scores.index(cur_rand)
-        else:
-            total_rand -= 1
+        sum_rand += list_scores.index(cur_rand)
 
-    print('Average top score %.4f', float(sum_100)/total_100)
-    print('total_100 ', total_100)
-    print('Average rand score %.4f', float(sum_rand)/total_rand)
-    print('total_rand ', total_rand)
+    print('Average top score %.4f', float(sum_100)/100)
+    print('Average rand score %.4f', float(sum_rand)/100)
 
 
 

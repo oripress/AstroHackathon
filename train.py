@@ -129,7 +129,7 @@ def distance_score_from_gan_dist(args):
                 print("Iter %d: loss %d" % (j, loss))
 
         fakes = gen(z)
-        batch_scores = loss_crit(fakes, batch)
+        batch_scores = torch.sum(torch.abs(fakes - batch), dim=1)
         scores[i * args.bs: i* args.bs + batch_scores.size(0)] = batch_scores
 
     return scores

@@ -2,8 +2,8 @@ import torch.nn as nn
 import torch
 import argparse
 
-from nets import GalaxyGenerator, GalaxyDiscriminator, Infer, weights_init
-from utils import GalaxySet, display_noise
+from nets import QuasarGenerator, QuasarDiscriminator, weights_init
+from utils import QuasarsSet, display_noise
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch.optim import Adam
@@ -19,31 +19,23 @@ def to_var(x, device):
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    gen = GalaxyGenerator(args.nz, args.nc, args.ngf)
+    gen = QuasarGenerator(args.nz, args.nc, args.ngf)
     gen = gen.to(device)
     gen.apply(weights_init)
 
-    discriminator = GalaxyDiscriminator(args.nc, args.ndf)
+    discriminator = QuasarDiscriminator(args.nc, args.ndf)
     discriminator = discriminator.to(device)
     discriminator.apply(weights_init)
-
-    infer = Infer(args.nc, args.ndf)
-    infer = infer.to(device)
-    infer.apply(weights_init)
 
     bce = nn.BCELoss()
     bce = bce.to(device)
 
-    mse = nn.MSELoss()
-    mse = mse.to(device)
-
-    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
+    galaxy_dataset = QuasarsSet(args.data_path, normalized=args.normalized, out=args.out)
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2, drop_last=True)
     loader_iter = iter(loader)
 
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
-    i_optimizer = Adam(infer.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)

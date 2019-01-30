@@ -11,9 +11,38 @@ def weights_init(m):
         m.bias.data.fill_(0)
 
 
-class Generator(nn.Module):
+class QuasarGenerator(nn.Module):
     def __init__(self, nz, nc, ngf):
-        super(Generator, self).__init__()
+        super(QuasarGenerator, self).__init__()
+        self.nz = nz
+        self.nc = nc
+        self.ngf = ngf
+        self.main = nn.Sequential(
+            nn.ConvTranspose1d(self.nz, self.ngf * 8, 8, 4, 1, bias=False),
+            nn.BatchNorm1d(ngf * 8),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 8, self.ngf * 4, 8, 4, 1, bias=False),
+            nn.BatchNorm1d(ngf * 4),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 2, 8, 4, 1, bias=False),
+            nn.BatchNorm1d(ngf * 2),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf * 2, self.ngf, 8, 4, 1, bias=False),
+            nn.BatchNorm1d(ngf),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(self.ngf, self.nc, 4, 2, 1, bias=False),
+            nn.Tanh()
+        )
+
+    def forward(self, x):
+        out = self.main(x)
+        clip_size = (out.size(-1) - 800) // 2
+        return out[:, :, clip_size + 1:-clip_size]
+
+
+class GalaxyGenerator(nn.Module):
+    def __init__(self, nz, nc, ngf):
+        super(GalaxyGenerator, self).__init__()
         self.nz = nz
         self.nc = nc
         self.ngf = ngf
@@ -43,9 +72,9 @@ class Generator(nn.Module):
         return out[:, :, clip_size + 1:-clip_size]
 
 
-class Discriminator(nn.Module):
+class GalaxyDiscriminator(nn.Module):
     def __init__(self, nc, ndf):
-        super(Discriminator, self).__init__()
+        super(GalaxyDiscriminator, self).__init__()
         self.nc = nc
         self.ndf = ndf
         self.main = nn.Sequential(
@@ -65,6 +94,33 @@ class Discriminator(nn.Module):
             # nn.BatchNorm1d(ndf * 16),
             # nn.LeakyReLU(0.2),
             nn.Conv1d(self.ndf * 8, self.nc, 8, 2, 1, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, out):
+        out = self.main(out)
+        return torch.mean(out.squeeze(), dim=1)
+
+
+class QuasarDiscriminator(nn.Module):
+    def __init__(self, nc, ndf):
+        super(QuasarDiscriminator, self).__init__()
+        self.nc = nc
+        self.ndf = ndf
+        self.main = nn.Sequential(
+            nn.Conv1d(self.nc, self.ndf, 4, 2, bias=False),
+            nn.BatchNorm1d(ndf),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf, self.ndf * 2, 4, 2, bias=False),
+            nn.BatchNorm1d(ndf * 2),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 2, self.ndf * 4, 4, 2, bias=False),
+            nn.BatchNorm1d(ndf * 4),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 4, self.ndf * 8, 4, 2, bias=False),
+            nn.BatchNorm1d(ndf * 8),
+            nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 8, self.nc, 4, 2, 1, bias=False),
             nn.Sigmoid()
         )
 

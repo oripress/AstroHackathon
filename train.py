@@ -204,7 +204,7 @@ if __name__ == '__main__':
 
     if args.train:
         train(args)
-    else:
+    if args.infer:
         rank_anamolies(args)
 
     # if args.infer:

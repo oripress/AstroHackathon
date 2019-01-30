@@ -50,7 +50,7 @@ def train(args):
 
         batch_data = to_var(batch_data, device).unsqueeze(1)
 
-        batch_data = batch_data[:, :, :800]
+        batch_data = batch_data[:, :, :1600:2]
         batch_data = batch_data.view(-1, 800)
 
         ### Train Discriminator ###
@@ -96,13 +96,29 @@ def train(args):
 
 
 def rank_anamolies(args):
-    pass
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
+    loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=False, num_workers=2, drop_last=True)
+    loader_iter = iter(loader)
+
+    for i in tqdm(range(args.iters)):
+        try:
+            batch_data = loader_iter.next()
+        except StopIteration:
+            loader_iter = iter(loader)
+            batch_data = loader_iter.next()
+
+        batch_data = to_var(batch_data, device).unsqueeze(1)
+
+        batch_data = batch_data[:, :, :800]
+        batch_data = batch_data.view(-1, 800)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', default='out')
-    parser.add_argument('--lr', type=float, default=0.0002)
+    parser.add_argument('--lr', type=float, default=0.00005)
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--data_path', type=str, required=True)

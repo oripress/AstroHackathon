@@ -95,23 +95,6 @@ def train(args):
             fixed_fake = gen(fixed_noise).detach().cpu().numpy()
             display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
 
-    # for i in tqdm(range(args.iters)):
-    #     ### Train Infer ###
-    #
-    #     i_optimizer.zero_grads()
-    #
-    #     z = to_var(torch.randn((args.bs, 1, args.nz)), device)
-    #     fakes = gen(z)
-    #     infer_fakes = infer(fakes)
-    #     infer_loss = bce(infer_fakes, z.detach())
-    #
-    #     infer_loss.backward()
-    #     i_optimizer.step()
-    #
-    #     if i % 100 == 0:
-    #         print("Iteration %d >> infer_loss: %.4f" % (i, infer_loss))
-    #         torch.save(infer.state_dict(), os.path.join(args.out, 'infer_%d.pkl' % i))
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

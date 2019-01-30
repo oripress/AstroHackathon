@@ -174,7 +174,7 @@ def rank_anamolies(args):
         cur = wall[i][0]
         sum_100 += list_scores.index(cur)
 
-        cur_rand = wall[random.randrange(len(scores))][0]
+        cur_rand = random.choice(wall)[0]
         sum_rand += list_scores.index(cur_rand)
 
     print('Average top score %.4f', float(sum_100)/100)

@@ -6,6 +6,7 @@ import torch
 
 import matplotlib.pyplot as plt
 
+
 class GalaxySet(Dataset):
     def __init__(self, data_path, normalized=False, out=''):
         super(GalaxySet, self).__init__()
@@ -16,6 +17,7 @@ class GalaxySet(Dataset):
         np_data = np.load(data_path)
 
         if not normalized:
+
             # find max feature value:
             max_data = np.max(np_data, axis=0)
             clipped_data = (np_data / max_data) * 2 - 1
@@ -24,7 +26,7 @@ class GalaxySet(Dataset):
             stds = np.std(clipped_data, axis=0)
 
             normalized_data = (clipped_data - means) / stds
-            np.save(os.path.join(out, "specs_normalized.npy"), normalized_data)
+            np.save(os.path.join(out, "specs_normalized"), normalized_data)
             print('Saving normalized data')
         else:
             normalized_data = np_data

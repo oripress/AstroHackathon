@@ -93,6 +93,7 @@ def train(args):
             fixed_fake = gen(fixed_noise).detach().cpu().numpy()
             real_data = batch_data[0].detach().cpu().numpy()
             print('>>>>>>>>>>>>> SIZES >>>>>>>>>>>>>>')
+            import pdb; pdb.set_trace()
             print(fixed_fake.size())
             print(real_data.size())
             gen.train()

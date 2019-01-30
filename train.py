@@ -95,7 +95,9 @@ def train(args):
             print("Iteration %d >> g_loss: %.4f., d_loss: %.4f." % (i, gen_loss, d_loss))
             torch.save(gen.state_dict(), os.path.join(args.out, 'gen_%d.pkl' % 0))
             torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % 0))
+            gen.eval()
             fixed_fake = gen(fixed_noise).detach().cpu().numpy()
+            gen.train()
             display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
 
     # for i in tqdm(range(args.iters)):

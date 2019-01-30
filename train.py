@@ -108,7 +108,7 @@ def distance_score_from_gan_dist(args):
 
     dataset = GalaxySet(args.data_path, args.normalized, args.out)
     loader = DataLoader(dataset, batch_size=args.infer_bs, shuffle=False, num_workers=2, drop_last=False)
-    scores = torch.zeros(len(loader) * args.bs)
+    scores = torch.zeros(len(loader) * args.infer_bs)
 
     loss_crit = nn.L1Loss().to(device)
 
@@ -128,7 +128,7 @@ def distance_score_from_gan_dist(args):
             #     print("Iter %d: loss %.4f" % (j, loss))
         fakes = gen(z)
         batch_scores = torch.sum(torch.abs(fakes - batch), dim=1)
-        scores[i * args.bs:  i * args.bs + batch_scores.size(0)] = batch_scores
+        scores[i * args.bs:  i * args.infer_bs + batch_scores.size(0)] = batch_scores
 
     return scores
 
@@ -149,7 +149,7 @@ def rank_anamolies(args):
     #     anomoly_dict[str(i)] = recon_losses[0]
 
     scores = distance_score_from_gan_dist(args)
-    scores = sorted(list(enumerate(scores)), key= lambda x: x[1], reverse=True)
+    scores = sorted(list(enumerate(scores)), key=lambda x: x[1], reverse=True)
 
     np.savetxt("all_scores.csv", scores, delimiter=",")
     np.savetxt("top_100.csv", scores[:100], delimiter=",")
@@ -158,7 +158,12 @@ def rank_anamolies(args):
     # anamoly_100 = [x[0] for x in anamoly_100]
     #
     wall = np.load(args.wall_path)
-    wall = sorted(list(enumerate(wall)), key= lambda x: x[1], reverse=True)
+    wall = sorted(list(enumerate(wall)), key=lambda x: x[1], reverse=True)
+
+    np.savetxt("wall_scores.csv", wall, delimiter=",")
+    np.savetxt("wall_100.csv", wall[:100], delimiter=",")
+
+
 
     # wall_dict = dict()
     #

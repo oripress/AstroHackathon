@@ -58,6 +58,8 @@ def train(args):
 
         batch_data = to_var(batch_data, device).unsqueeze(1)
 
+        batch_data = batch_data[:, :800]
+
         ### Train Discriminator ###
 
         d_optimizer.zero_grad()

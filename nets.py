@@ -10,59 +10,43 @@ def weights_init(m):
 
 
 class Generator(nn.Module):
-    def __init__(self, nz, nc, ngf):
+    def __init__(self, nz, nf):
         super(Generator, self).__init__()
         self.nz = nz
-        self.nc = nc
-        self.ngf = ngf
+        self.nf = nf
         self.main = nn.Sequential(
-            nn.ConvTranspose1d(self.nz, self.ngf * 16, 8, 2, bias=False),
-            nn.BatchNorm1d(ngf * 16),
+            nn.Linear(self.nz, 100),
+            nn.BatchNorm1d(100),
             nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 16, self.ngf * 8, 8, 4, 1, bias=False),
-            nn.BatchNorm1d(ngf * 8),
+            nn.Linear(100, 200),
+            nn.BatchNorm1d(200),
             nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 8, self.ngf * 4, 8, 4, 1, bias=False),
-            nn.BatchNorm1d(ngf * 4),
+            nn.Linear(200, 400),
+            nn.BatchNorm1d(400),
             nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 4, self.ngf * 2, 8, 4, 1, bias=False),
-            nn.BatchNorm1d(ngf * 2),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf * 2, self.ngf, 8, 4, 1, bias=False),
-            nn.BatchNorm1d(ngf),
-            nn.ReLU(True),
-            nn.ConvTranspose1d(self.ngf, self.nc, 8, 4, 1, bias=False),
-            nn.Tanh()
+            nn.Linear(400, self.nf),
         )
 
     def forward(self, x):
         out = self.main(x)
-        clip_size = (out.size(-1) - 8295) // 2
-        return out[:, :, clip_size + 1:-clip_size]
+        return out
 
 
 class Discriminator(nn.Module):
-    def __init__(self, nc, ndf):
+    def __init__(self, nf):
         super(Discriminator, self).__init__()
-        self.nc = nc
-        self.ndf = ndf
+        self.ndf = nf
         self.main = nn.Sequential(
-            nn.Conv1d(self.nc, self.ndf, 8, 4, bias=False),
-            nn.BatchNorm1d(ndf),
+            nn.Linear(self.nf, 400),
+            nn.BatchNorm1d(400),
             nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf, self.ndf * 2, 8, 4, bias=False),
-            nn.BatchNorm1d(ndf * 2),
+            nn.Linear(400, 200),
+            nn.BatchNorm1d(200),
             nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 2, self.ndf * 4, 8, 4, bias=False),
-            nn.BatchNorm1d(ndf * 4),
+            nn.Linear(200, 100),
+            nn.BatchNorm1d(100),
             nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 4, self.ndf * 8, 8, 4, bias=False),
-            nn.BatchNorm1d(ndf * 8),
-            nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 8, self.ndf * 16, 8, 4, bias=False),
-            nn.BatchNorm1d(ndf * 16),
-            nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 16, self.nc, 8, 2, 1, bias=False),
+            nn.Linear(100, 1),
             nn.Sigmoid()
         )
 

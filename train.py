@@ -108,7 +108,7 @@ def distance_score_from_gan_dist(args):
 
     dataset = GalaxySet(args.data_path, args.normalized, args.out)
     loader = DataLoader(dataset, batch_size=args.bs, shuffle=False, num_workers=2, drop_last=False)
-    scores = torch.zeros(len(loader))
+    scores = torch.zeros(len(loader) * args.bs)
 
     loss_crit = nn.L1Loss().to(device)
 
@@ -130,7 +130,7 @@ def distance_score_from_gan_dist(args):
 
         fakes = gen(z)
         batch_scores = torch.sum(torch.abs(fakes - batch), dim=1)
-        scores[i * args.bs: i* args.bs + batch_scores.size(0)] = batch_scores
+        scores[i * args.bs:  i * args.bs + batch_scores.size(0)] = batch_scores
 
     return scores
 

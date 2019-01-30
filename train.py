@@ -178,7 +178,7 @@ def rank_anamolies(args):
         else:
             total_100 -= 1
 
-        cur_rand = wall[random.randrange(scores.shape[0])][0]
+        cur_rand = wall[random.randrange(len(scores))][0]
         if cur_rand in scores:
             sum_rand += scores.index(cur_rand)
         else:

@@ -98,7 +98,6 @@ def train(args):
 
 
 def distance_score_from_gan_dist(args):
-
     device_str = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device_str)
 
@@ -114,7 +113,7 @@ def distance_score_from_gan_dist(args):
     loss_crit = nn.L1Loss().to(device)
 
     for i, batch in tqdm(enumerate(loader)):
-        batch = to_var(batch, device_str)[:, :1600:2 ]
+        batch = to_var(batch, device_str)[:, :1600:2]
         z = to_var(torch.randn(batch.size(0), args.nz), device_str, grads=True)
         z_optim = Adam([z], lr=args.lr)
         for j in range(args.infer_iter):

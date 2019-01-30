@@ -12,6 +12,8 @@ from tqdm import tqdm
 import os
 import numpy as np
 
+import csv
+
 
 def to_var(x, device, grads=False):
     return Variable(x, requires_grad=grads).to(device)
@@ -97,7 +99,6 @@ def train(args):
 
 
 def distance_score_from_gan_dist(args):
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     gen = Generator(args.nz, 800)
@@ -111,7 +112,7 @@ def distance_score_from_gan_dist(args):
     loss_crit = nn.L1Loss()
 
     for i, batch in tqdm(enumerate(loader)):
-        batch = to_var(batch, device)[:, :1600:2 ]
+        batch = to_var(batch, device)[:, :1600:2]
         z = to_var(torch.randn(batch.size(0), args.nz), device, grads=True)
         z_optim = Adam([z], lr=args.lr)
         for j in range(args.infer_iter):
@@ -128,49 +129,53 @@ def distance_score_from_gan_dist(args):
 
         fakes = gen(z)
         batch_scores = loss_crit(fakes, batch)
-        scores[i * args.bs: i* args.bs + batch.size(0)] = batch_scores
+        scores[i * args.bs: i * args.bs + batch.size(0)] = batch_scores
+
+    return scores
 
 
 def rank_anamolies(args):
-    anomoly_dict = dict()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #
+    # galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
+    # loader = DataLoader(galaxy_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=True)
+    #
+    # for i, batch_data in enumerate(loader):
+    #     batch_data = to_var(batch_data, device).unsqueeze(1)
+    #
+    #     batch_data = batch_data[:, :, :1600:2]
+    #     batch_data = batch_data.view(-1, 800)
+    #
+    #     recon_losses = distance_score_from_gan_dist(batch_data)
+    #     anomoly_dict[str(i)] = recon_losses[0]
 
-    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
-    loader = DataLoader(galaxy_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=True)
+    scores = distance_score_from_gan_dist(args)
+    scores = sorted(list(enumerate(scores)), key= lambda x: x[1], reverse=True)
 
-    for i, batch_data in enumerate(loader):
-        batch_data = to_var(batch_data, device).unsqueeze(1)
+    np.savetxt("all_scores.csv", scores, delimiter=",")
+    np.savetxt("top_100.csv", scores[:100], delimiter=",")
 
-        batch_data = batch_data[:, :, :1600:2]
-        batch_data = batch_data.view(-1, 800)
-
-        recon_losses = find_best_z(batch_data)
-        anomoly_dict[str(i)] = recon_losses[0]
-
-    anamoly_100 = sorted(anomoly_dict.items(), key=lambda x: -x[1])[:100]
-    anamoly_100 = [x[0] for x in anamoly_100]
-
-    wall = np.load(args.wall_path)
-    wall_dict = dict()
-
-    for i in range(wall_dict.shape[0]):
-        wall_dict[i] = wall[i]
-
-    wall_100 = sorted(wall_dict.items(), key=lambda x: -x[1])[:100]
-    wall_100 = [x[0] for x in wall_100]
-
-    correct = 0
-    total = 0
-
-    for anamoly in anamoly_100:
-        if anamoly in wall_100:
-            correct += 1
-        total += 1
-
-    print('Percentage of anamolies hit: %.4f', (float(correct) / total))
-
-def find_best_z():
-    pass
+    # anamoly_100 = sorted(anomoly_dict.items(), key=lambda x: -x[1])[:100]
+    # anamoly_100 = [x[0] for x in anamoly_100]
+    #
+    # wall = np.load(args.wall_path)
+    # wall_dict = dict()
+    #
+    # for i in range(wall_dict.shape[0]):
+    #     wall_dict[i] = wall[i]
+    #
+    # wall_100 = sorted(wall_dict.items(), key=lambda x: -x[1])[:100]
+    # wall_100 = [x[0] for x in wall_100]
+    #
+    # correct = 0
+    # total = 0
+    #
+    # for anamoly in anamoly_100:
+    #     if anamoly in wall_100:
+    #         correct += 1
+    #     total += 1
+    #
+    # print('Percentage of anamolies hit: %.4f', (float(correct) / total))
 
 
 if __name__ == '__main__':
@@ -199,7 +204,9 @@ if __name__ == '__main__':
 
     if args.train:
         train(args)
+    else:
+        rank_anamolies(args)
 
-    if args.infer:
-        scores = distance_score_from_gan_dist(args)
-        torch.save(scores, os.path.join(args.out, "infer_scores.pkl"))
+    # if args.infer:
+    #     scores = distance_score_from_gan_dist(args)
+    #     torch.save(scores, os.path.join(args.out, "infer_scores.pkl"))

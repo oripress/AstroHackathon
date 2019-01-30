@@ -19,11 +19,11 @@ def to_var(x, device):
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    gen = Generator(args.nz, args.nc, args.ngf)
+    gen = Generator(args.nz, 800)
     gen = gen.to(device)
     gen.apply(weights_init)
 
-    discriminator = Discriminator(args.nc, args.ndf)
+    discriminator = Discriminator(args.nz)
     discriminator = discriminator.to(device)
     discriminator.apply(weights_init)
 

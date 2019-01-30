@@ -47,7 +47,7 @@ def train(args):
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
-    fixed_noise = to_var(torch.randn(1, args.nz, 1), device)
+    fixed_noise = to_var(torch.randn(1, args.nz), device)
 
     for i in tqdm(range(args.iters)):
         try:
@@ -70,7 +70,7 @@ def train(args):
         d_loss = bce(pred_real, real_labels)
 
         # train infer with fakes
-        z = to_var(torch.randn((args.bs, args.nz, 1)), device)
+        z = to_var(torch.randn((args.bs, args.nz)), device)
         fakes = gen(z)
         pred_fake = discriminator(fakes.detach())
         d_loss += bce(pred_fake, fake_labels)
@@ -83,7 +83,7 @@ def train(args):
 
         g_optimizer.zero_grad()
 
-        z = to_var(torch.randn((args.bs, args.nz, 1)), device)
+        z = to_var(torch.randn((args.bs, args.nz)), device)
         fakes = gen(z)
         pred_fake = discriminator(fakes)
         gen_loss = bce(pred_fake, real_labels)

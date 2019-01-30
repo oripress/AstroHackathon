@@ -37,7 +37,7 @@ def train(args):
     mse = nn.MSELoss()
     mse = mse.to(device)
 
-    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized)
+    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2, drop_last=True)
     loader_iter = iter(loader)
 

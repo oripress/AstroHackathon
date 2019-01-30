@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from torch.utils.data import Dataset
 import torch
@@ -5,12 +7,12 @@ import torch
 import matplotlib.pyplot as plt
 
 class GalaxySet(Dataset):
-    def __init__(self, data_path, normalized=False):
+    def __init__(self, data_path, normalized=False, out=''):
         super(GalaxySet, self).__init__()
 
-        self.data = self.load_data(data_path, normalized)
+        self.data = self.load_data(data_path, normalized, out)
 
-    def load_data(self, data_path, normalized):
+    def load_data(self, data_path, normalized, out):
         np_data = np.load(data_path)
 
         if not normalized:
@@ -22,7 +24,7 @@ class GalaxySet(Dataset):
             stds = np.std(clipped_data, axis=0)
 
             normalized_data = (clipped_data - means) / stds
-            np.save(data_path[:-4] + "_normalized.npy", normalized_data)
+            np.save(os.path.join(out, "specs_normalized.npy"), normalized_data)
             print('Saving normalized data')
         else:
             normalized_data = np_data

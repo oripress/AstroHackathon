@@ -115,7 +115,7 @@ def distance_score_from_gan_dist(args):
     for i, batch in tqdm(enumerate(loader)):
         batch = to_var(batch, device)[:, :1600:2]
         z = torch.randn(batch.size(0), args.nz, device=device_str, requires_grad=True)
-        z_optim = Adam([z], lr=args.lr)
+        z_optim = Adam([z], lr=args.infer_lr)
         for j in range(args.infer_iter):
             z_optim.zero_grad()
             fakes = gen(z)
@@ -195,6 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--infer', action='store_true')
     parser.add_argument('--infer_iter', type=int, default=100)
+    parser.add_argument('--infer_lr', type=float, default=0.2)
     parser.add_argument('--gen_file')
 
     args = parser.parse_args()

@@ -35,7 +35,7 @@ class Generator(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self, nf):
         super(Discriminator, self).__init__()
-        self.ndf = nf
+        self.nf = nf
         self.main = nn.Sequential(
             nn.Linear(self.nf, 400),
             nn.BatchNorm1d(400),

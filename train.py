@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 import os
 
+
 def to_var(x, device):
     return Variable(x, requires_grad=False).to(device)
 
@@ -26,15 +27,8 @@ def train(args):
     discriminator = discriminator.to(device)
     discriminator.apply(weights_init)
 
-    infer = Infer(args.nc, args.ndf)
-    infer = infer.to(device)
-    infer.apply(weights_init)
-
     bce = nn.BCELoss()
     bce = bce.to(device)
-
-    mse = nn.MSELoss()
-    mse = mse.to(device)
 
     galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
     loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2, drop_last=True)
@@ -42,7 +36,6 @@ def train(args):
 
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
-    i_optimizer = Adam(infer.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
     real_labels = to_var(torch.ones(args.bs), device)
     fake_labels = to_var(torch.zeros(args.bs), device)
@@ -101,22 +94,9 @@ def train(args):
             display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
             display_noise(real_data.squeeze(), os.path.join(args.out, "real_%d.png" % 0))
 
-    # for i in tqdm(range(args.iters)):
-    #     ### Train Infer ###
-    #
-    #     i_optimizer.zero_grads()
-    #
-    #     z = to_var(torch.randn((args.bs, 1, args.nz)), device)
-    #     fakes = gen(z)
-    #     infer_fakes = infer(fakes)
-    #     infer_loss = bce(infer_fakes, z.detach())
-    #
-    #     infer_loss.backward()
-    #     i_optimizer.step()
-    #
-    #     if i % 100 == 0:
-    #         print("Iteration %d >> infer_loss: %.4f" % (i, infer_loss))
-    #         torch.save(infer.state_dict(), os.path.join(args.out, 'infer_%d.pkl' % i))
+
+def rank_anamolies(args):
+    pass
 
 
 if __name__ == '__main__':

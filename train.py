@@ -187,7 +187,6 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, required=True)
     parser.add_argument('--normalized', action='store_true')
     parser.add_argument('--wall_path', type=str)
-    parser.add_argument('--train', action='store_true')
     parser.add_argument('--nz', type=int, default=100)
     parser.add_argument('--nc', type=int, default=1)
     parser.add_argument('--ngf', type=int, default=64)

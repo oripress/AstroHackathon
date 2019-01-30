@@ -126,7 +126,7 @@ def distance_score_from_gan_dist(args):
             z_optim.step()
 
             if j % 20 == 0:
-                print("Iter %d: loss %d" % (j, loss))
+                print("Iter %d: loss %.4f" % (j, loss))
 
         fakes = gen(z)
         batch_scores = torch.sum(torch.abs(fakes - batch), dim=1)

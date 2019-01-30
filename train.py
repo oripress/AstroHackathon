@@ -122,12 +122,10 @@ def distance_score_from_gan_dist(args):
             loss = loss_crit(fakes, batch)
 
             loss.backward()
-
             z_optim.step()
 
-            if j % 20 == 0:
-                print("Iter %d: loss %.4f" % (j, loss))
-
+            # if j % 20 == 0:
+            #     print("Iter %d: loss %.4f" % (j, loss))
         fakes = gen(z)
         batch_scores = torch.sum(torch.abs(fakes - batch), dim=1)
         scores[i * args.bs:  i * args.bs + batch_scores.size(0)] = batch_scores
@@ -194,7 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('--ndf', type=int, default=64)
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--infer', action='store_true')
-    parser.add_argument('--infer_iter', type=int, default=100)
+    parser.add_argument('--infer_iter', type=int, default=250)
     parser.add_argument('--infer_lr', type=float, default=0.2)
     parser.add_argument('--gen_file')
 

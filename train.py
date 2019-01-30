@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 import argparse
 
-from nets import Generator, Discriminator, Infer, weights_init
+from nets import Generator, Discriminator, weights_init
 from utils import GalaxySet, display_noise
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
@@ -10,7 +10,6 @@ from torch.optim import Adam
 from tqdm import tqdm
 
 import os
-
 
 def to_var(x, device):
     return Variable(x, requires_grad=False).to(device)

@@ -12,8 +12,8 @@ from tqdm import tqdm
 import os
 
 
-def to_var(x, device):
-    return Variable(x, requires_grad=False).to(device)
+def to_var(x, device, grads=False):
+    return Variable(x, requires_grad=grads).to(device)
 
 
 def train(args):
@@ -95,6 +95,41 @@ def train(args):
             display_noise(real_data.squeeze(), os.path.join(args.out, "real_%d.png" % 0))
 
 
+def distance_score_from_gan_dist(args):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    gen = Generator(args.nz, 800)
+    gen.load_state_dict(torch.load(args.gen_file))
+    gen.eval()
+
+    dataset = GalaxySet(args.data_path, args.normalized, args.out)
+    loader = DataLoader(dataset, batch_size=args.bs, shuffle=False, num_workers=2, drop_last=False)
+    scores = torch.zeros(len(loader))
+
+    loss_crit = nn.L1Loss()
+
+    for i, batch in tqdm(enumerate(loader)):
+        batch = to_var(batch, device)[:, :1600:2 ]
+        z = to_var(torch.randn(batch.size(0), args.nz), device, grads=True)
+        z_optim = Adam([z], lr=args.lr)
+        for j in range(args.infer_iter):
+            z_optim.zero_grad()
+            fakes = gen(z)
+            loss = loss_crit(fakes, batch)
+
+            loss.backward()
+
+            z_optim.step()
+
+            if j % 20 == 0:
+                print("Iter %d: loss %d" % (j, loss))
+
+        fakes = gen(z)
+        batch_scores = loss_crit(fakes, batch)
+        scores[i * args.bs: i* args.bs + batch.size(0)] = batch_scores
+
+
 def rank_anamolies(args):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -132,10 +167,19 @@ if __name__ == '__main__':
     parser.add_argument('--nc', type=int, default=1)
     parser.add_argument('--ngf', type=int, default=64)
     parser.add_argument('--ndf', type=int, default=64)
+    parser.add_argument('--train', action='store_true')
+    parser.add_argument('--infer', action='store_true')
+    parser.add_argument('--infer_iter', type=int, default=100)
+    parser.add_argument('--gen_file')
 
     args = parser.parse_args()
 
     if not os.path.exists(args.out):
         os.mkdir(args.out)
 
-    train(args)
+    if args.train:
+        train(args)
+
+    if args.infer:
+        scores = distance_score_from_gan_dist(args)
+        torch.save(scores, os.path.join(args.out, "infer_scores.pkl"))

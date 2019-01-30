@@ -100,7 +100,7 @@ def train(args):
             real_data = batch_data[0:5].detach().cpu().numpy()
             gen.train()
             display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
-            display_noise(real_data.squeeze(), os.path.join(args.out, "gen_fake_%d.png" % 0))
+            display_noise(real_data.squeeze(), os.path.join(args.out, "real_%d.png" % 0))
 
     # for i in tqdm(range(args.iters)):
     #     ### Train Infer ###

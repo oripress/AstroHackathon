@@ -91,7 +91,7 @@ def train(args):
         gen_loss.backward()
         g_optimizer.step()
 
-        if i % 100 == 0:
+        if i % 1000 == 0:
             print("Iteration %d >> g_loss: %.4f., d_loss: %.4f." % (i, gen_loss, d_loss))
             torch.save(gen.state_dict(), os.path.join(args.out, 'gen_%d.pkl' % 0))
             torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % 0))
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--data_path', type=str, required=True)
-    parser.add_argument('--normalized', type=bool, default=False)
+    parser.add_argument('--normalized', action='store_true')
     parser.add_argument('--nz', type=int, default=100)
     parser.add_argument('--nc', type=int, default=1)
     parser.add_argument('--ngf', type=int, default=64)

@@ -51,17 +51,17 @@ def display_noise(noise, out):
 
 
 if __name__ == "__main__":
-    # x = np.random.randint(0, 1000, (1000, 8295))
-    #
-    # np.save("test_normalize.npy", x)
-    #
-    # galaxy_set = GalaxySet("test_normalize.npy")
-    #
-    # y = galaxy_set[0]
-    #
-    # print(torch.mean(y, dim=0))
-    # print(torch.std(y, dim=0))
-    #
+    x = np.random.randint(0, 1000, (1000, 8295))
 
-    noise = np.random.randint(0, 1000, 8295)
-    display_noise(noise, './')
+    np.save("test_normalize.npy", x)
+
+    galaxy_set = GalaxySet("test_normalize.npy")
+
+    y = galaxy_set[0]
+
+    print(torch.mean(y, dim=0))
+    print(torch.std(y, dim=0))
+
+
+    # noise = np.random.randint(0, 1000, 8295)
+    # display_noise(noise, './')

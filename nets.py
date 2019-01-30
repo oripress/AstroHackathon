@@ -49,16 +49,16 @@ class Discriminator(nn.Module):
         self.nc = nc
         self.ndf = ndf
         self.main = nn.Sequential(
-            nn.Conv1d(self.nc, self.ndf, 8, 4, bias=False),
+            nn.Conv1d(self.nc, self.ndf, 8, 2, bias=False),
             nn.BatchNorm1d(ndf),
             nn.LeakyReLU(0.2),
             nn.Conv1d(self.ndf, self.ndf * 2, 8, 4, bias=False),
             nn.BatchNorm1d(ndf * 2),
             nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 2, self.ndf * 4, 8, 2, bias=False),
+            nn.Conv1d(self.ndf * 2, self.ndf * 4, 8, 4, bias=False),
             nn.BatchNorm1d(ndf * 4),
             nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 4, self.ndf * 8, 8, 2, bias=False),
+            nn.Conv1d(self.ndf * 4, self.ndf * 8, 8, 4, bias=False),
             nn.BatchNorm1d(ndf * 8),
             # nn.LeakyReLU(0.2),
             # nn.Conv1d(self.ndf * 8, self.ndf * 16, 8, 4, bias=False),
@@ -70,6 +70,7 @@ class Discriminator(nn.Module):
 
     def forward(self, out):
         out = self.main(out)
+        import pdb; pdb.set_trace()
         return torch.mean(out.squeeze(), dim=1)
 
 

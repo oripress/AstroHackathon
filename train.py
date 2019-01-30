@@ -107,7 +107,7 @@ def distance_score_from_gan_dist(args):
     gen.eval()
 
     dataset = GalaxySet(args.data_path, args.normalized, args.out)
-    loader = DataLoader(dataset, batch_size=args.bs, shuffle=False, num_workers=2, drop_last=False)
+    loader = DataLoader(dataset, batch_size=args.infer_bs, shuffle=False, num_workers=2, drop_last=False)
     scores = torch.zeros(len(loader) * args.bs)
 
     loss_crit = nn.L1Loss().to(device)
@@ -157,7 +157,9 @@ def rank_anamolies(args):
     # anamoly_100 = sorted(anomoly_dict.items(), key=lambda x: -x[1])[:100]
     # anamoly_100 = [x[0] for x in anamoly_100]
     #
-    # wall = np.load(args.wall_path)
+    wall = np.load(args.wall_path)
+    wall = sorted(list(enumerate(wall)), key= lambda x: x[1], reverse=True)
+
     # wall_dict = dict()
     #
     # for i in range(wall_dict.shape[0]):
@@ -192,8 +194,9 @@ if __name__ == '__main__':
     parser.add_argument('--ndf', type=int, default=64)
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--infer', action='store_true')
-    parser.add_argument('--infer_iter', type=int, default=250)
+    parser.add_argument('--infer_iter', type=int, default=50)
     parser.add_argument('--infer_lr', type=float, default=0.2)
+    parser.add_argument('--infer_bs', type=int, default=128)
     parser.add_argument('--gen_file')
 
     args = parser.parse_args()

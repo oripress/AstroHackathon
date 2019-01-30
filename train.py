@@ -10,6 +10,7 @@ from torch.optim import Adam
 from tqdm import tqdm
 
 import os
+import numpy as np
 
 
 def to_var(x, device, grads=False):
@@ -131,25 +132,42 @@ def distance_score_from_gan_dist(args):
 
 
 def rank_anamolies(args):
-
+    anomoly_dict = dict()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
-    loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=False, num_workers=2, drop_last=True)
-    loader_iter = iter(loader)
+    loader = DataLoader(galaxy_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=True)
 
-    for i in tqdm(range(args.iters)):
-        try:
-            batch_data = loader_iter.next()
-        except StopIteration:
-            loader_iter = iter(loader)
-            batch_data = loader_iter.next()
-
+    for i, batch_data in enumerate(loader):
         batch_data = to_var(batch_data, device).unsqueeze(1)
 
         batch_data = batch_data[:, :, :1600:2]
         batch_data = batch_data.view(-1, 800)
 
+        recon_losses = find_best_z(batch_data)
+        anomoly_dict[str(i)] = recon_losses[0]
+
+    anamoly_100 = sorted(anomoly_dict.items(), key=lambda x: -x[1])[:100]
+    anamoly_100 = [x[0] for x in anamoly_100]
+
+    wall = np.load(args.wall_path)
+    wall_dict = dict()
+
+    for i in range(wall_dict.shape[0]):
+        wall_dict[i] = wall[i]
+
+    wall_100 = sorted(wall_dict.items(), key=lambda x: -x[1])[:100]
+    wall_100 = [x[0] for x in wall_100]
+
+    correct = 0
+    total = 0
+
+    for anamoly in anamoly_100:
+        if anamoly in wall_100:
+            correct += 1
+        total += 1
+
+    print('Percentage of anamolies hit: %.4f', (float(correct) / total))
 
 def find_best_z():
     pass
@@ -163,6 +181,8 @@ if __name__ == '__main__':
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--data_path', type=str, required=True)
     parser.add_argument('--normalized', action='store_true')
+    parser.add_argument('--wall_path', type=str)
+    parser.add_argument('--train', action='store_true')
     parser.add_argument('--nz', type=int, default=100)
     parser.add_argument('--nc', type=int, default=1)
     parser.add_argument('--ngf', type=int, default=64)

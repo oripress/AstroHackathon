@@ -113,7 +113,7 @@ def distance_score_from_gan_dist(args):
 
     for i, batch in tqdm(enumerate(loader)):
         batch = to_var(batch, device)[:, :1600:2]
-        z = to_var(torch.randn(batch.size(0), args.nz), device, grads=True).requires_grad_()
+        z = to_var(torch.randn(batch.size(0), args.nz), device, grads=True)
         z_optim = Adam([z], lr=args.lr)
         for j in range(args.infer_iter):
             z_optim.zero_grad()

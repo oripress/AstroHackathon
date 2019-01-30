@@ -1,4 +1,6 @@
 import torch.nn as nn
+import torch
+
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -53,22 +55,22 @@ class Discriminator(nn.Module):
             nn.Conv1d(self.ndf, self.ndf * 2, 8, 4, bias=False),
             nn.BatchNorm1d(ndf * 2),
             nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 2, self.ndf * 4, 8, 4, bias=False),
+            nn.Conv1d(self.ndf * 2, self.ndf * 4, 8, 2, bias=False),
             nn.BatchNorm1d(ndf * 4),
             nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 4, self.ndf * 8, 8, 4, bias=False),
+            nn.Conv1d(self.ndf * 4, self.ndf * 8, 8, 2, bias=False),
             nn.BatchNorm1d(ndf * 8),
-            nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 8, self.ndf * 16, 8, 4, bias=False),
-            nn.BatchNorm1d(ndf * 16),
-            nn.LeakyReLU(0.2),
-            nn.Conv1d(self.ndf * 16, self.nc, 8, 2, 1, bias=False),
+            # nn.LeakyReLU(0.2),
+            # nn.Conv1d(self.ndf * 8, self.ndf * 16, 8, 4, bias=False),
+            # nn.BatchNorm1d(ndf * 16),
+            # nn.LeakyReLU(0.2),
+            nn.Conv1d(self.ndf * 8, self.nc, 8, 2, 1, bias=False),
             nn.Sigmoid()
         )
 
-    def forward(self, net):
-        net = self.main(net)
-        return net
+    def forward(self, out):
+        out = self.main(out)
+        return torch.mean(out.squeeze(), dim=1)
 
 
 class Infer(nn.Module):

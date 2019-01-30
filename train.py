@@ -1,3 +1,5 @@
+import random
+
 import torch.nn as nn
 import torch
 import argparse
@@ -162,6 +164,21 @@ def rank_anamolies(args):
 
     np.savetxt("wall_scores.csv", wall, delimiter=",")
     np.savetxt("wall_100.csv", wall[:100], delimiter=",")
+
+    sum_100 = 0
+    sum_rand = 0
+
+    for i in range(100):
+        cur = wall[i][0]
+        sum_100 += scores.index(cur)
+
+        cur_rand = wall[random.randrange(scores.shape[0])][0]
+        sum_rand += scores.index(cur_rand)
+
+
+    print('Average top score %.4f', float(sum_100)/100)
+    print('Average rand score %.4f', float(sum_rand)/100)
+
 
 
 

@@ -92,6 +92,9 @@ def train(args):
             gen.eval()
             fixed_fake = gen(fixed_noise).detach().cpu().numpy()
             real_data = batch_data[0].detach().cpu().numpy()
+            print('>>>>>>>>>>>>> SIZES >>>>>>>>>>>>>>')
+            print(fixed_fake.size())
+            print(real_data.size())
             gen.train()
             display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
             display_noise(real_data.squeeze(), os.path.join(args.out, "real_%d.png" % 0))
@@ -131,50 +134,53 @@ def distance_score_from_gan_dist(args):
 
         fakes = gen(z)
         batch_scores = loss_crit(fakes, batch)
-        scores[i * args.bs: i* args.bs + batch.size(0)] = batch_scores
+        scores[i * args.bs: i* args.bs + batch_scores.size(0)] = batch_scores
+
+    return scores
 
 
 def rank_anamolies(args):
-    anomoly_dict = dict()
-    device_str = "cuda" if torch.cuda.is_available() else "cpu"
-    device = torch.device(device_str)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #
+    # galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
+    # loader = DataLoader(galaxy_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=True)
+    #
+    # for i, batch_data in enumerate(loader):
+    #     batch_data = to_var(batch_data, device).unsqueeze(1)
+    #
+    #     batch_data = batch_data[:, :, :1600:2]
+    #     batch_data = batch_data.view(-1, 800)
+    #
+    #     recon_losses = distance_score_from_gan_dist(batch_data)
+    #     anomoly_dict[str(i)] = recon_losses[0]
 
-    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
-    loader = DataLoader(galaxy_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=True)
+    scores = distance_score_from_gan_dist(args)
+    scores = sorted(list(enumerate(scores)), key= lambda x: x[1], reverse=True)
 
-    for i, batch_data in enumerate(loader):
-        batch_data = to_var(batch_data, device_str).unsqueeze(1)
+    np.savetxt("all_scores.csv", scores, delimiter=",")
+    np.savetxt("top_100.csv", scores[:100], delimiter=",")
 
-        batch_data = batch_data[:, :, :1600:2]
-        batch_data = batch_data.view(-1, 800)
-
-        recon_losses = find_best_z(batch_data)
-        anomoly_dict[str(i)] = recon_losses[0]
-
-    anamoly_100 = sorted(anomoly_dict.items(), key=lambda x: -x[1])[:100]
-    anamoly_100 = [x[0] for x in anamoly_100]
-
-    wall = np.load(args.wall_path)
-    wall_dict = dict()
-
-    for i in range(wall_dict.shape[0]):
-        wall_dict[i] = wall[i]
-
-    wall_100 = sorted(wall_dict.items(), key=lambda x: -x[1])[:100]
-    wall_100 = [x[0] for x in wall_100]
-
-    correct = 0
-    total = 0
-
-    for anamoly in anamoly_100:
-        if anamoly in wall_100:
-            correct += 1
-        total += 1
-
-    print('Percentage of anamolies hit: %.4f', (float(correct) / total))
-
-def find_best_z():
-    pass
+    # anamoly_100 = sorted(anomoly_dict.items(), key=lambda x: -x[1])[:100]
+    # anamoly_100 = [x[0] for x in anamoly_100]
+    #
+    # wall = np.load(args.wall_path)
+    # wall_dict = dict()
+    #
+    # for i in range(wall_dict.shape[0]):
+    #     wall_dict[i] = wall[i]
+    #
+    # wall_100 = sorted(wall_dict.items(), key=lambda x: -x[1])[:100]
+    # wall_100 = [x[0] for x in wall_100]
+    #
+    # correct = 0
+    # total = 0
+    #
+    # for anamoly in anamoly_100:
+    #     if anamoly in wall_100:
+    #         correct += 1
+    #     total += 1
+    #
+    # print('Percentage of anamolies hit: %.4f', (float(correct) / total))
 
 
 if __name__ == '__main__':
@@ -186,7 +192,6 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, required=True)
     parser.add_argument('--normalized', action='store_true')
     parser.add_argument('--wall_path', type=str)
-    parser.add_argument('--train', action='store_true')
     parser.add_argument('--nz', type=int, default=100)
     parser.add_argument('--nc', type=int, default=1)
     parser.add_argument('--ngf', type=int, default=64)
@@ -205,5 +210,8 @@ if __name__ == '__main__':
         train(args)
 
     if args.infer:
-        scores = distance_score_from_gan_dist(args)
-        torch.save(scores, os.path.join(args.out, "infer_scores.pkl"))
+        rank_anamolies(args)
+
+    # if args.infer:
+    #     scores = distance_score_from_gan_dist(args)
+    #     torch.save(scores, os.path.join(args.out, "infer_scores.pkl"))

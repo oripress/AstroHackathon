@@ -12,15 +12,14 @@ from tqdm import tqdm
 import os
 import numpy as np
 
-import csv
-
 
 def to_var(x, device, grads=False):
-    return Variable(x, requires_grad=grads).to(device)
+    return Variable(x, requires_grad=grads, device=device)
 
 
 def train(args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device_str)
 
     gen = Generator(args.nz, 800)
     gen = gen.to(device)
@@ -40,9 +39,9 @@ def train(args):
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
-    real_labels = to_var(torch.ones(args.bs), device)
-    fake_labels = to_var(torch.zeros(args.bs), device)
-    fixed_noise = to_var(torch.randn(1, args.nz), device)
+    real_labels = to_var(torch.ones(args.bs), device_str)
+    fake_labels = to_var(torch.zeros(args.bs), device_str)
+    fixed_noise = to_var(torch.randn(1, args.nz), device_str)
 
     for i in tqdm(range(args.iters)):
         try:
@@ -51,7 +50,7 @@ def train(args):
             loader_iter = iter(loader)
             batch_data = loader_iter.next()
 
-        batch_data = to_var(batch_data, device).unsqueeze(1)
+        batch_data = to_var(batch_data, device_str).unsqueeze(1)
 
         batch_data = batch_data[:, :, :1600:2]
         batch_data = batch_data.view(-1, 800)
@@ -65,7 +64,7 @@ def train(args):
         d_loss = bce(pred_real, real_labels)
 
         # train infer with fakes
-        z = to_var(torch.randn((args.bs, args.nz)), device)
+        z = to_var(torch.randn((args.bs, args.nz)), device_str)
         fakes = gen(z)
         pred_fake = discriminator(fakes.detach())
         d_loss += bce(pred_fake, fake_labels)
@@ -78,7 +77,7 @@ def train(args):
 
         g_optimizer.zero_grad()
 
-        z = to_var(torch.randn((args.bs, args.nz)), device)
+        z = to_var(torch.randn((args.bs, args.nz)), device_str)
         fakes = gen(z)
         pred_fake = discriminator(fakes)
         gen_loss = bce(pred_fake, real_labels)
@@ -99,21 +98,24 @@ def train(args):
 
 
 def distance_score_from_gan_dist(args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device_str)
 
     gen = Generator(args.nz, 800)
     gen.load_state_dict(torch.load(args.gen_file))
+    gen = gen.to(device)
     gen.eval()
 
     dataset = GalaxySet(args.data_path, args.normalized, args.out)
     loader = DataLoader(dataset, batch_size=args.bs, shuffle=False, num_workers=2, drop_last=False)
     scores = torch.zeros(len(loader))
 
-    loss_crit = nn.L1Loss()
+    loss_crit = nn.L1Loss().to(device)
 
     for i, batch in tqdm(enumerate(loader)):
-        batch = to_var(batch, device)[:, :1600:2]
-        z = to_var(torch.randn(batch.size(0), args.nz), device, grads=True)
+        batch = to_var(batch, device_str)[:, :1600:2 ]
+        z = to_var(torch.randn(batch.size(0), args.nz), device_str, grads=True)
         z_optim = Adam([z], lr=args.lr)
         for j in range(args.infer_iter):
             z_optim.zero_grad()
@@ -129,7 +131,7 @@ def distance_score_from_gan_dist(args):
 
         fakes = gen(z)
         batch_scores = loss_crit(fakes, batch)
-        scores[i * args.bs: i * args.bs + batch.size(0)] = batch_scores
+        scores[i * args.bs: i* args.bs + batch_scores.size(0)] = batch_scores
 
     return scores
 
@@ -203,6 +205,7 @@ if __name__ == '__main__':
 
     if args.train:
         train(args)
+
     if args.infer:
         rank_anamolies(args)
 

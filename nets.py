@@ -70,7 +70,6 @@ class Discriminator(nn.Module):
 
     def forward(self, out):
         out = self.main(out)
-        import pdb; pdb.set_trace()
         return torch.mean(out.squeeze(), dim=1)
 
 

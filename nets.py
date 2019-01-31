@@ -25,7 +25,7 @@ class Generator(nn.Module):
             nn.BatchNorm1d(400),
             nn.ReLU(True),
             nn.Linear(400, self.nf),
-            # nn.Tanh()
+            nn.Tanh()
         )
 
     def forward(self, x):

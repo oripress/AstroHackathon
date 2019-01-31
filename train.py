@@ -155,6 +155,7 @@ def rank_anamolies(args):
 
     np.savetxt("all_scores.csv", scores, delimiter=",")
     np.savetxt("top_100.csv", scores[:100], delimiter=",")
+    np.savetxt("top_500.csv", scores[:500], delimiter=",")
 
     # anamoly_100 = sorted(anomoly_dict.items(), key=lambda x: -x[1])[:100]
     # anamoly_100 = [x[0] for x in anamoly_100]
@@ -165,20 +166,36 @@ def rank_anamolies(args):
     np.savetxt("wall_scores.csv", wall, delimiter=",")
     np.savetxt("wall_100.csv", wall[:100], delimiter=",")
 
-    sum_100 = 0
-    sum_rand = 0
+    list_scores = [x[0] for x in scores[:100]]
+    list_wall = [x[0] for x in wall[:100]]
 
-    list_scores = [x[0] for x in scores]
+    scores_set = set(list_scores)
+    wall_set = set(list_wall)
 
-    for i in range(100):
-        cur = wall[i][0]
-        sum_100 += list_scores.index(cur)
+    print('Intersection 100 : {}'.format(scores_set.intersection(wall_set).__len__()))
 
-        cur_rand = random.choice(wall)[0]
-        sum_rand += list_scores.index(cur_rand)
+    list_scores = [x[0] for x in scores[:500]]
+    list_wall = [x[0] for x in wall[:500]]
 
-    print('Average top score %.4f', float(sum_100)/100)
-    print('Average rand score %.4f', float(sum_rand)/100)
+    scores_set = set(list_scores)
+    wall_set = set(list_wall)
+
+    print('Intersection 500 : {}'.format(scores_set.intersection(wall_set).__len__()))
+
+    # sum_100 = 0
+    # sum_rand = 0
+    #
+    # list_scores = [x[0] for x in scores]
+    #
+    # for i in range(100):
+    #     cur = wall[i][0]
+    #     sum_100 += list_scores.index(cur)
+    #
+    #     cur_rand = random.choice(wall)[0]
+    #     sum_rand += list_scores.index(cur_rand)
+    #
+    # print('Average top score %.4f', float(sum_100)/100)
+    # print('Average rand score %.4f', float(sum_rand)/100)
 
 
 

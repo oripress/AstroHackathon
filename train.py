@@ -148,7 +148,7 @@ def test(args, gen):
             scores_dict[batch_scores[k]] = labels[k]
 
 
-    anamoly_100 = sorted(scores_dict.items(), key=lambda x: x[0])[:100]
+    anamoly_100 = sorted(scores_dict.items(), key=lambda x: x[0], reverse=True)[:100]
     total_counts = 10 * [0]
     for key_val in anamoly_100:
         key, val = key_val

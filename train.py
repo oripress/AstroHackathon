@@ -1,6 +1,5 @@
-import random
-
 import torch.nn as nn
+import torchvision
 import torch
 import argparse
 
@@ -11,6 +10,8 @@ from torch.autograd import Variable
 from torch.optim import Adam
 from tqdm import tqdm
 
+import torchvision.transforms as transforms
+
 import os
 import numpy as np
 
@@ -20,90 +21,150 @@ def to_var(x, device, grads=False):
 
 
 def train(args):
+    train_data = torchvision.datasets.MNIST(
+        root='./mnist/',
+        train=True,
+        transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ]),
+        download=args.dl,
+    )
+
     device_str = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device_str)
 
-    gen = Generator(args.nz, 800)
+    gen = Generator(args.nz, 784)
     gen = gen.to(device)
     gen.apply(weights_init)
 
-    discriminator = Discriminator(800)
+    discriminator = Discriminator(784)
     discriminator = discriminator.to(device)
     discriminator.apply(weights_init)
 
     bce = nn.BCELoss()
     bce = bce.to(device)
 
-    galaxy_dataset = GalaxySet(args.data_path, normalized=args.normalized, out=args.out)
-    loader = DataLoader(galaxy_dataset, batch_size=args.bs, shuffle=True, num_workers=2, drop_last=True)
-    loader_iter = iter(loader)
+    loader = DataLoader(train_data, batch_size=args.bs, shuffle=True, num_workers=2, drop_last=True)
 
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
-    real_labels = to_var(torch.ones(args.bs), device_str)
-    fake_labels = to_var(torch.zeros(args.bs), device_str)
-    fixed_noise = to_var(torch.randn(1, args.nz), device_str)
+    # fixed_noise = to_var(torch.randn(1, args.nz), device_str)
 
-    for i in tqdm(range(args.iters)):
-        try:
-            batch_data = loader_iter.next()
-        except StopIteration:
-            loader_iter = iter(loader)
-            batch_data = loader_iter.next()
+    total_iters = 0
+    while total_iters < args.iters:
+        for i, batch in enumerate(loader):
+            batch_data, labels = batch
 
-        batch_data = to_var(batch_data, device).unsqueeze(1)
+            batch_data = batch_data[labels != args.digit]
+            batch_data = to_var(batch_data, device)
 
-        batch_data = batch_data[:, :, :1600:2]
-        batch_data = batch_data.view(-1, 800)
+            real_labels = to_var(torch.ones(batch_data.size(0)), device_str)
+            fake_labels = to_var(torch.zeros(batch_data.size(0)), device_str)
 
-        ### Train Discriminator ###
+            batch_data = batch_data.view(-1, 784)
 
-        d_optimizer.zero_grad()
+            ### Train Discriminator ###
 
-        # train Infer with real
-        pred_real = discriminator(batch_data)
-        d_loss = bce(pred_real, real_labels)
+            d_optimizer.zero_grad()
 
-        # train infer with fakes
-        z = to_var(torch.randn((args.bs, args.nz)), device)
+            # train Infer with real
+            pred_real = discriminator(batch_data)
+            d_loss = bce(pred_real, real_labels)
+
+            # train infer with fakes
+            z = to_var(torch.randn((batch_data.size(0), args.nz)), device)
+            fakes = gen(z)
+            pred_fake = discriminator(fakes.detach())
+            d_loss += bce(pred_fake, fake_labels)
+
+            d_loss.backward()
+
+            d_optimizer.step()
+
+            ### Train Gen ###
+
+            g_optimizer.zero_grad()
+
+            z = to_var(torch.randn((batch_data.size(0), args.nz)), device)
+            fakes = gen(z)
+            pred_fake = discriminator(fakes)
+            gen_loss = bce(pred_fake, real_labels)
+
+            gen_loss.backward()
+            g_optimizer.step()
+
+            if total_iters % 5000 == 0:
+                print("Iteration %d >> g_loss: %.4f., d_loss: %.4f." % (i, gen_loss, d_loss))
+                torch.save(gen.state_dict(), os.path.join(args.out, 'gen_%d.pkl' % 0))
+                torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % 0))
+                gen.eval()
+                test(args, gen)
+                gen.train()
+                # fixed_fake = gen(fixed_noise).detach().cpu().numpy()
+                # real_data = batch_data[0].detach().cpu().numpy()
+                # display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
+                # display_noise(real_data.squeeze(), os.path.join(args.out, "real_%d.png" % 0))
+            total_iters += 1
+
+def test(args, gen):
+    scores_dict = dict()
+    device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device_str)
+
+    test_data = torchvision.datasets.MNIST(
+        root='./mnist/',
+        train=False,
+        transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ]),
+        download=args.dl,
+    )
+
+    loader = DataLoader(test_data, batch_size=args.bs, shuffle=True, num_workers=2, drop_last=True)
+    loss_crit = nn.L1Loss().to(device)
+
+    for batch in loader:
+        batch_data, labels = batch
+        batch_data = to_var(batch_data, device)
+        batch_data = batch_data.view(-1, 784)
+
+        z = torch.randn(batch_data.size(0), args.nz, device=device_str, requires_grad=True)
+        z_optim = Adam([z], lr=args.infer_lr)
+        for j in range(args.infer_iter):
+            z_optim.zero_grad()
+            fakes = gen(z)
+            loss = loss_crit(fakes, batch_data)
+
+            loss.backward()
+            z_optim.step()
+
         fakes = gen(z)
-        pred_fake = discriminator(fakes.detach())
-        d_loss += bce(pred_fake, fake_labels)
+        batch_scores = torch.sum(torch.abs(fakes - batch_data), dim=1)
 
-        d_loss.backward()
+        for k in range(batch_scores.size(0)):
+            scores_dict[batch_scores[k]] = labels[k]
 
-        d_optimizer.step()
 
-        ### Train Gen ###
+    anamoly_100 = sorted(scores_dict.items(), key=lambda x: x[0])[:100]
+    total_counts = 10 * [0]
+    for key_val in anamoly_100:
+        key, val = key_val
+        total_counts[val] += 1
 
-        g_optimizer.zero_grad()
+    print('>>>>>>>>>>>>>>>')
+    print('Total counts: ', total_counts)
+    print('>>>>>>>>>>>>>>>')
 
-        z = to_var(torch.randn((args.bs, args.nz)), device)
-        fakes = gen(z)
-        pred_fake = discriminator(fakes)
-        gen_loss = bce(pred_fake, real_labels)
-
-        gen_loss.backward()
-        g_optimizer.step()
-
-        if i % 5000 == 0:
-            print("Iteration %d >> g_loss: %.4f., d_loss: %.4f." % (i, gen_loss, d_loss))
-            torch.save(gen.state_dict(), os.path.join(args.out, 'gen_%d.pkl' % 0))
-            torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % 0))
-            gen.eval()
-            fixed_fake = gen(fixed_noise).detach().cpu().numpy()
-            real_data = batch_data[0].detach().cpu().numpy()
-            gen.train()
-            display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
-            display_noise(real_data.squeeze(), os.path.join(args.out, "real_%d.png" % 0))
 
 
 def distance_score_from_gan_dist(args):
     device_str = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device_str)
 
-    gen = Generator(args.nz, 800)
+    gen = Generator(args.nz, 784)
     gen.load_state_dict(torch.load(args.gen_file))
     gen = gen.to(device)
     gen.eval()
@@ -225,7 +286,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.00005)
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--iters', type=int, default=1250000)
-    parser.add_argument('--data_path', type=str, required=True)
+    parser.add_argument('--digit', type=int, default=0)
     parser.add_argument('--normalized', action='store_true')
     parser.add_argument('--wall_path', type=str)
     parser.add_argument('--nz', type=int, default=100)
@@ -237,6 +298,7 @@ if __name__ == '__main__':
     parser.add_argument('--infer_iter', type=int, default=50)
     parser.add_argument('--infer_lr', type=float, default=0.2)
     parser.add_argument('--infer_bs', type=int, default=128)
+    parser.add_argument('--dl', action='store_true')
     parser.add_argument('--gen_file')
 
     args = parser.parse_args()

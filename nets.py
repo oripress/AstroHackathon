@@ -53,7 +53,7 @@ class Discriminator(nn.Module):
 
     def forward(self, net):
         net = self.main(net)
-        return net
+        return net.view(-1)
 
 
 if __name__=='__main__':

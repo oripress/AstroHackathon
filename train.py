@@ -26,7 +26,7 @@ def train(args):
         train=True,
         transform=transforms.Compose([
                            transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
+                           transforms.Normalize((0.5,), (0.5,))
                        ]),
         download=args.dl,
     )
@@ -50,7 +50,7 @@ def train(args):
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
-    # fixed_noise = to_var(torch.randn(1, args.nz), device_str)
+    fixed_noise = to_var(torch.randn(16, args.nz), device_str)
 
     total_iters = 0
     while total_iters < args.iters:
@@ -100,6 +100,7 @@ def train(args):
                 torch.save(gen.state_dict(), os.path.join(args.out, 'gen_%d.pkl' % 0))
                 torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % 0))
                 gen.eval()
+                display_noise(args, gen, fixed_noise)
                 test(args, gen)
                 gen.train()
                 # fixed_fake = gen(fixed_noise).detach().cpu().numpy()
@@ -107,6 +108,7 @@ def train(args):
                 # display_noise(fixed_fake.squeeze(), os.path.join(args.out, "gen_sample_%d.png" % i))
                 # display_noise(real_data.squeeze(), os.path.join(args.out, "real_%d.png" % 0))
             total_iters += 1
+
 
 def test(args, gen):
     scores_dict = dict()

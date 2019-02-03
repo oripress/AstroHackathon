@@ -5,6 +5,8 @@ from torch.utils.data import Dataset
 import torch
 
 import matplotlib.pyplot as plt
+import torchvision.utils as vutils
+
 
 class GalaxySet(Dataset):
     def __init__(self, data_path, normalized=False, out=''):
@@ -48,7 +50,11 @@ def display_noise(noise, out):
     fig.clf()
 
 
-
+def display_images(args, gen, fixed_noise):
+    imgs = gen(fixed_noise)
+    vutils.save_image(imgs,
+                      '%s/experiments.png' % (args.out),
+                      normalize=True, nrow=8)
 
 if __name__ == "__main__":
     # x = np.random.randint(0, 1000, (1000, 8295))

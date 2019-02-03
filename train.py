@@ -4,7 +4,7 @@ import torch
 import argparse
 
 from nets import Generator, Discriminator, weights_init
-from utils import GalaxySet, display_noise
+from utils import GalaxySet, display_images
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch.optim import Adam
@@ -100,7 +100,7 @@ def train(args):
                 torch.save(gen.state_dict(), os.path.join(args.out, 'gen_%d.pkl' % 0))
                 torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % 0))
                 gen.eval()
-                display_noise(args, gen, fixed_noise)
+                display_images(args, gen, fixed_noise)
                 test(args, gen)
                 gen.train()
                 # fixed_fake = gen(fixed_noise).detach().cpu().numpy()

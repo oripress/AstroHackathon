@@ -101,7 +101,7 @@ def train(args):
                 torch.save(discriminator.state_dict(), os.path.join(args.out, 'disc_%d.pkl' % 0))
                 gen.eval()
                 display_images(args, gen, fixed_noise)
-                test(args, gen)
+                # test(args, gen)
                 gen.train()
                 # fixed_fake = gen(fixed_noise).detach().cpu().numpy()
                 # real_data = batch_data[0].detach().cpu().numpy()

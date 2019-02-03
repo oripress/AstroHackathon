@@ -52,9 +52,12 @@ def display_noise(noise, out):
 
 def display_images(args, gen, fixed_noise):
     imgs = gen(fixed_noise)
+    # imgs = imgs.unsqueeze(1)
+    # imgs = imgs.repeat(1, 3, 1)
+    imgs = imgs.view(-1, 1, 28, 28)
     vutils.save_image(imgs,
                       '%s/experiments.png' % (args.out),
-                      normalize=True, nrow=4)
+                      normalize=True, nrow=8)
 
 if __name__ == "__main__":
     # x = np.random.randint(0, 1000, (1000, 8295))

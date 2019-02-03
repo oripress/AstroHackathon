@@ -54,7 +54,7 @@ def display_images(args, gen, fixed_noise):
     imgs = gen(fixed_noise)
     vutils.save_image(imgs,
                       '%s/experiments.png' % (args.out),
-                      normalize=True, nrow=8)
+                      normalize=True, nrow=4)
 
 if __name__ == "__main__":
     # x = np.random.randint(0, 1000, (1000, 8295))

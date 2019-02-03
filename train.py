@@ -50,7 +50,7 @@ def train(args):
     d_optimizer = Adam(discriminator.parameters(), betas=(0.5, 0.999), lr=args.lr)
     g_optimizer = Adam(gen.parameters(), betas=(0.5, 0.999), lr=args.lr)
 
-    fixed_noise = to_var(torch.randn(16, args.nz), device_str)
+    fixed_noise = to_var(torch.randn(64, args.nz), device_str)
 
     total_iters = 0
     while total_iters < args.iters:
